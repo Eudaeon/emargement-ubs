@@ -2,7 +2,7 @@
 
 Ce projet est un fork de [MTlyx/Emarge](https://github.com/MTlyx/Emarge), qui :
 
-- Supporte les cours qui chevauchent des créneaux de cours classiques (par example un cours de 9h00 à 10h30, chevauche les plages 8h00-9h30 et 9h45-11h15).
+- Supporte les cours qui chevauchent des créneaux de cours classiques (par example un cours de 9h00 à 10h30, qui chevauche les plages 8h00-9h30 et 9h45-11h15).
 
 - Supporte les changements d'emploi du temps durant la journée. Cela fonctionne en récupérant la liste des cours toutes les 30 minutes, et si un changement est détecté, les heures d'émargement sont recalculées (sauf pour le créneau actuel pour éviter des double émargements ou des omissions d'émargements).
 
@@ -65,4 +65,4 @@ Les notifications sont gérées avec [ntfy.sh](https://ntfy.sh/). C'est très si
 > [!NOTE]
 > Les *topics*  sont partagés et hébergés sur un serveur public, entrez donc une valeur aléatoire pour éviter de recevoir des notifications indésirables envoyées par d'autres personnes.
 
-3. Entrer le *topic* que vous avez utilisé dans le fichier `secrets.env`, et relancez le Docker.
+3. Entrer le *topic* que vous avez utilisé dans le fichier `secrets.env`.

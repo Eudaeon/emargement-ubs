@@ -29,6 +29,7 @@ EMARGEMENT_TIMERANGES = {
     "16:30": "18:00",
     "18:15": "19:45",
 }
+REFRESH_LESSONS = 30
 DELTA_START_TIME, DELTA_END_TIME = 1, 7
 LOG_FILE = "emargement.log"
 MOODLE_URL = "https://moodle.univ-ubs.fr/"
@@ -162,7 +163,7 @@ def fetch_lessons():
             event_date = datetime.fromtimestamp(event["start"] / 1000, tz=PARIS_TZ)
             if event_date.strftime("%Y-%m-%d") == today_str and (
                 datetime.fromtimestamp(event["start"] / 1000, tz=PARIS_TZ)
-            ) + timedelta(minutes=15) > datetime.now(PARIS_TZ):
+            ) + timedelta(minutes=REFRESH_LESSONS) > datetime.now(PARIS_TZ):
                 lessons.append(
                     {
                         "name": event["name"],
@@ -437,7 +438,7 @@ def main():
     init_logging()
     validate_config()
     print(f"[{BLUE}INFO{RESET}] Démarrage du programme d'émargement...")
-    schedule.every(15).minutes.do(schedule_emargement)
+    schedule.every(REFRESH_LESSONS).minutes.do(schedule_emargement)
     schedule_emargement()
     while True:
         schedule.run_pending()
