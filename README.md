@@ -1,84 +1,68 @@
-# 🎓 Automatisation de l'émargement v2.3
+# 🎓 Automatisation de l'émargement
 
-Ce projet vise à automatiser l'émargement des étudiants de l'Université Bretagne Sud, en particulier ceux de l'ENSIBS. En utilisant Selenium dans un conteneur Docker, il enregistre automatiquement leur présence en cours, évitant ainsi toute retenue sur leur salaire. Son fonctionnement : chaque jour de la semaine, il récupère les cours de l'étudiant via l'API de PlanningSup et, au début de chaque cours, il émarge automatiquement entre 15 et 25 minutes après le début du cours.
+Ce projet est un fork de [MTlyx/Emarge](https://github.com/MTlyx/Emarge), qui :
 
-> [!CAUTION]
-> Ce dépôt Github est à utiliser avec prudence. Si vous le mettez en place, assurez-vous d'être présent à chaque cours de votre emploi du temps.
+- Supporte les cours qui chevauchent des créneaux de cours classiques (par example un cours de 9h00 à 10h30, chevauche les plages 8h00-9h30 et 9h45-11h15).
 
-## 📌 Installation
+- Supporte les changements d'emploi du temps durant la journée. Cela fonctionne en récupérant la liste des cours toutes les 30 minutes, et si un changement est détecté, les heures d'émargement sont recalculées (sauf pour le créneau actuel pour éviter des double émargements ou des omissions d'émargements).
 
-1. Clonez le dépôt Github
+- Supporte l'anglais, en spécifiant `LANG=EN` dans le `docker-compose.yml`.
 
-```bash
-git clone https://github.com/MTlyx/Emarge.git && cd Emarge
-```
+- Sépare les variables d'environnement sensibles dans un fichier `secrets.env`.
 
-2. Modifiez les variables d'environnement du fichier `docker-compose.yml`
+- Augmente le délai entre le actions effectuées par Selenium, pour bien laisser le temps à la page de se charger.
 
-Les variables à modifier sont les suivantes :
-- `FORMATION` : formation de l'étudiant (cyberdefense, cyberdata ou cyberlog)
-- `ANNEE` : Année d'étude (3, 4 ou 5)
-- `TP` : Numéro du groupe de TP (1 à 6)
-- `Us` : Votre identifiant UBS
-- `Pa` : Votre mot de passe UBS
-- `blacklist` : Liste de mots-clés pour exclure certains cours de l'émargement automatique
+- Vérifie si l'émargement a bien été effectué en recherchant un message spécifique sur la page d'émargement. Ajoute également un système de notifications permettant d’être informé en cas de succès ou d'échec (configurable avec `TOPIC` dans `secrets.env`).
 
-Exemple de configuration d'un cyberdefense en 3eme année dans le TP 1
+- Possède une version plus à jour de `geckodriver`, et qui fixe la version de `selenium` pour garantir la compatibilité avec le driver.
+
+## Configuration
+
+### `docker-compose.yml`
+
+| Variable    | Description                                    | Valeurs possibles                                              |
+| ----------- | ---------------------------------------------- | -------------------------------------------------------------- |
+| `FORMATION` | Formation de l'étudiant                        | `cyberdefense`, `cyberdata`, `cyberlog`                        |
+| `ANNEE`     | Année d'étude                                  | `3`, `4`, `5`                                                  |
+| `TP`        | Numéro du groupe de TP                         | `1` à `6`                                                      |
+| `BLACKLIST` | Liste de mots-clés pour exclure certains cours | Ex. `Entrainement Le Robert, Activités HACK2G2, Activités GCC` |
+| `LANG`      | Langue de Moodle                               | `EN` pour anglais, `FR` (par défaut)                           |
+
+Exemple de configuration d'un cyberdefense en 3eme année dans le TP 1 :
+
 ```yaml
 - FORMATION=cyberdefense
 - ANNEE=3
 - TP=1
-- Us=E123456
-- Pa=MonSuperMotDePasse
-- blacklist=Entrainement Le Robert, Activités HACK2G2, Activités GCC
+- BLACKLIST=Entrainement Le Robert, Activités HACK2G2, Activités GCC
 ```
+
+### `secrets.env`
+
+| Variable   | Description                                           |
+| ---------- | ----------------------------------------------------- |
+| `USERNAME` | Identifiant UBS                                       |
+| `PASSWORD` | Mot de passe UBS                                      |
+| `TOPIC`    | Identifiant du canal de notification ntfy (optionnel) |
+
+Exemple de configuration :
+```yaml
+USERNAME=e123456
+PASSWORD=SuperSecurePassword
+TOPIC=UnTrucRandom
+```
+
+## Notifications
+
+Les notifications sont gérées avec [ntfy.sh](https://ntfy.sh/). C'est très simple d'utilisation :
+
+1. Installez l'application [ntfy.sh](https://ntfy.sh/) (depuis les stores officiels, F-Droid ou [source](https://github.com/binwiederhier/ntfy))
+
+   ![ntfy.sh](https://raw.githubusercontent.com/binwiederhier/ntfy/refs/heads/main/.github/images/screenshot-phone-main.jpg)
+
+2. Appuyez sur le `+` en bas a droite et entrez un *topic* (nom unique pour votre canal de notification, l'application enverra les notifications à ce *topic*).
 
 > [!NOTE]
-> La `blacklist` est une liste de mots-clés permettant d'exclure certains cours de l'émargement automatique. Lors de l'exécution, tout cours dont le nom contient un des mots-clés de la `blacklist` ne sera pas émargé. Il est recommandé de laisser la blacklist comme dans l'exemple ci-dessus.
+> Les *topics*  sont partagés et hébergés sur un serveur public, entrez donc une valeur aléatoire pour éviter de recevoir des notifications indésirables envoyées par d'autres personnes.
 
-3. Lancez le conteneur Docker
-
-```bash
-sudo docker compose up -d
-```
-
-## Upgrade
-
-Pour commencer, il faut supprimer le conteneur Docker avec la commande
-
-```bash
-sudo docker compose down
-```
-
-Ensuite, il faut mettre à jour le projet avec conteneur Docker, commencez par mettre à jour les différents fichiers avec
-
-```bash
-git pull
-```
-
-Enfin, il ne reste plus qu'à le relancer avec l'option `--build` en plus
-
-```bash
-sudo docker compose up --build -d
-```
-
-## 📊 Vérification des logs
-
-Vous pouvez vérifier vos logs de deux manières :
-
-1. Directement depuis Docker :
-
-```bash
-sudo docker compose logs -f
-```
-
-2. En consultant le fichier de log :
-
-```bash
-cat app/emargement.log
-```
-
-Les logs vous permettront de voir :
-- Les horaires prévus d'émargement
-- Les succès/échecs des émargements
-- Les éventuelles erreurs
+3. Entrer le *topic* que vous avez utilisé dans le fichier `secrets.env`, et relancez le Docker.
