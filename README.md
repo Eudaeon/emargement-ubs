@@ -1,4 +1,4 @@
-# 🎓 Automatisation de l'émargement
+# Automatisation de l'émargement ENSIBS
 
 Ce projet est un fork de [MTlyx/Emarge](https://github.com/MTlyx/Emarge), qui :
 
